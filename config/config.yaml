@@ -1,0 +1,38 @@
+# ============================================================
+# ChatDevLite-24201320 全局配置
+# 所有可调参数集中在此，改这里即可，无需改动核心代码。
+# ============================================================
+
+model:
+  # 后端类型：mock（离线自带，用于演示/自测）| openai（任意 OpenAI 兼容接口）| ollama（本地模型）
+  backend: mock
+  # 模型名。示例：
+  #   DeepSeek : deepseek-flash / deepseek-v4-pro
+  #   通义千问 : qwen-plus
+  #   OpenAI   : gpt-4o-mini
+  #   Ollama   : qwen2.5:7b
+  name: gpt-4o-mini
+  # OpenAI 兼容接口的地址。写到域名或 /v1 为止即可，程序会自动补 /chat/completions。
+  #   DeepSeek : https://api.deepseek.com
+  #   通义千问 : https://dashscope.aliyuncs.com/compatible-mode/v1
+  #   智谱     : https://open.bigmodel.cn/api/paas/v4
+  #   OpenAI   : https://api.openai.com/v1
+  base_url: https://api.openai.com/v1
+  # API Key，建议写在 .env 里（OPENAI_API_KEY），此处留空则从环境变量读取
+  api_key: ""
+  temperature: 0.7
+  timeout: 120
+  # Ollama 服务地址（backend=ollama 时生效）
+  ollama_host: http://localhost:11434
+
+runtime:
+  # 每个子任务的最多对话轮数（指导者 <-> 助手）
+  max_rounds: 2
+  # 每个智能体记忆流保留的历史消息条数（Memory Stream 的滑动窗口）
+  memory_limit: 12
+  # 产物根目录（工作区建在其下）
+  warehouse: WareHouse
+  # 日志文件名（JSONL，位于 WareHouse/<项目名>/logs/ 下）
+  log_name: run.jsonl
+  # 是否对产物做 Git 版本管理
+  git: true

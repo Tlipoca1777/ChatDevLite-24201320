@@ -1,0 +1,128 @@
+# ============================================================
+# Chat Chain 流程配置（阶段与原子子任务编排）
+# 每个子任务 = 一对「指导者 Instructor + 助手 Assistant」的多轮对话。
+# 想新增/删减阶段或子任务，只改本文件即可。
+#
+# 可用占位符：
+#   {task}        用户输入的原始需求
+#   {project}     项目名（ChatDevLite-24201320）
+#   {<artifact>}  之前某个子任务产出的制品，如 {requirement} {design} {code} {review}
+# ============================================================
+
+phases:
+  # ---------------- 阶段一：设计 ----------------
+  - name: 设计
+    key: design
+    subtasks:
+      - name: 需求澄清
+        instructor: CEO
+        assistant: CPO
+        artifact: requirement
+        write: docs/需求说明.md
+        prompt: |
+          项目名称：{project}
+          用户用一句话提出的需求是：{task}
+
+          请你作为 CPO，与 CEO 确认后输出一份简洁的《需求说明》：
+          1) 软件类型与目标用户；2) 功能清单（编号列出，3~6 条）；3) 验收标准。
+          不要写代码。
+
+      - name: 架构设计
+        instructor: CPO
+        assistant: CTO
+        artifact: design
+        write: docs/设计说明.md
+        prompt: |
+          用户需求：{task}
+
+          需求说明如下：
+          {requirement}
+
+          请你作为 CTO，输出《技术方案》：
+          1) 技术栈（限定 Python 标准库）；2) 文件与模块划分；3) 核心数据结构与关键流程。
+          不要输出完整实现代码。
+
+  # ---------------- 阶段二：编码 ----------------
+  - name: 编码
+    key: coding
+    subtasks:
+      - name: 代码编写
+        instructor: CTO
+        assistant: Programmer
+        artifact: code
+        extract_code: true
+        prompt: |
+          项目：{project}
+          用户需求：{task}
+
+          需求说明：
+          {requirement}
+
+          技术方案：
+          {design}
+
+          请你作为程序员，实现一个最小可运行的 Python 程序。
+          硬性要求：只使用 Python 标准库；用 ```python 文件名 的代码块给出每个文件；必须包含 main.py 入口。
+
+  # ---------------- 阶段三：测试 ----------------
+  - name: 测试
+    key: testing
+    subtasks:
+      - name: 代码评审
+        instructor: Programmer
+        assistant: Reviewer
+        artifact: review
+        prompt: |
+          请对以下代码做静态评审（代码走查）：
+
+          {code}
+
+          按「问题 / 严重级别 / 修改建议」列出；若没有问题请明确写出「代码评审通过」。
+
+      - name: 缺陷修复
+        instructor: Reviewer
+        assistant: Programmer
+        artifact: code
+        extract_code: true
+        skip_if:
+          artifact: review
+          contains: ["代码评审通过", "评审通过"]
+        prompt: |
+          评审意见如下：
+          {review}
+
+          当前代码：
+          {code}
+
+          请根据评审意见修复缺陷，并输出修改后的完整文件（仍用 ```python 文件名 代码块）。
+
+      - name: 系统测试
+        instructor: Programmer
+        assistant: Tester
+        artifact: test_report
+        write: docs/测试报告.md
+        prompt: |
+          请对以下代码做动态黑盒测试：
+
+          {code}
+
+          请给出测试用例表（输入 / 预期输出 / 实际结果），并给出整体结论；若全部通过请明确写出「测试通过」。
+
+  # ---------------- 阶段四：文档 ----------------
+  - name: 文档
+    key: documentation
+    subtasks:
+      - name: 用户手册
+        instructor: CTO
+        assistant: CPO
+        artifact: manual
+        write: README.md
+        prompt: |
+          项目：{project}
+          用户需求：{task}
+
+          请基于下列信息编写《用户手册》（Markdown 格式）：
+          功能说明：{requirement}
+          运行方式：Python 标准库直接运行 main.py
+
+          内容需包含：项目简介、环境要求、安装与运行步骤、使用示例、常见问题。

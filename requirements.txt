@@ -1,0 +1,4 @@
+# ChatDevLite-24201320 依赖
+# 核心框架仅依赖 PyYAML 读取配置文件；其余全部使用 Python 标准库。
+# 若需调用真实大模型，也不需要额外 SDK（内置 urllib 实现）。
+PyYAML>=6.0
